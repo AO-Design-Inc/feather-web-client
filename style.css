@@ -1,0 +1,63 @@
+body {
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+}
+
+section {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+video {
+  object-fit: cover;
+  margin: 0;
+  top: 0;
+}
+
+#stats {
+  position: fixed;
+  bottom: 0;
+
+  padding: 10px;
+  height: auto;
+  overflow: hidden;
+  color: white;
+
+  background-color: rgba(0, 0, 0, 0.5);
+
+  transition: right 0.5s, background-color 0.5s;
+}
+
+#stats.open {
+  right: 0px;
+}
+
+#stats.closed {
+  right: -100px;
+}
+
+#stats:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+}
+
+/*@media (prefers-color-scheme: dark) {
+  body {
+    background: #19191a;
+    border: 1px solid rgba(75, 71, 77, 0.1);
+  }
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background: radial-gradient(
+      129.08% 126.58% at 0% 100%,
+      #fff8f9 0%,
+      #fff4f1 57.63%,
+      #f6f1ff 100%
+    );
+    border: 1px solid #ffffff;
+  }
+}*/
