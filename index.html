@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; connect-src https://simplesignal.api.feather.systems; frame-src https://www.youtube.com/"
-    />
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <section>
-      <video playsinline="true" autoplay="true" muted="true" id="video"></video>
-    </section>
-    <div id="stats" class="closed">
-      <span>encode:</span><span id="encode-stat"></span> ms<br />
-      <span>decode:</span><span id="decode-stat"></span> ms<br />
-      <span>fps:</span><span id="fps-stat"></span> <br />
-      <span>bitrate:</span> <span id="bitrate-stat"></span><span>Mbps</span
-      ><br />
-      <span>RTT:</span><span id="rtt-stat"></span><span>ms</span> <br />
-      <span>DC RTT:</span><span id="dc-stat"></span><span>ms</span>
-      <!--<br />
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; script-src 'self'; connect-src https://experimental.simplesignal.api.feather.systems; frame-src https://www.youtube.com/"
+		/>
+		<title>Document</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<section>
+			<video playsinline="true" autoplay="true" muted="true" id="video"></video>
+		</section>
+		<div id="stats" class="closed">
+			<span>encode:</span><span id="encode-stat"></span> ms<br />
+			<span>decode:</span><span id="decode-stat"></span> ms<br />
+			<span>fps:</span><span id="fps-stat"></span> <br />
+			<span>bitrate:</span> <span id="bitrate-stat"></span><span>Mbps</span
+			><br />
+			<span>RTT:</span><span id="rtt-stat"></span><span>ms</span> <br />
+			<span>DC RTT:</span><span id="dc-stat"></span><span>ms</span>
+			<!--<br />
       <form id="form">
         <input id="bitrate" type="text" /><button id="submit-bitrate">Send</button> <br />
       </form>
       <span id="user-feedback"></span>-->
-    </div>
-    <script src="script.js"></script>
-  </body>
+		</div>
+		<script src="script.js"></script>
+	</body>
 </html>
