@@ -108,14 +108,18 @@ if (params.server) {
 	const mousemoveDC = getDataChannel(connection, "mousemouse", 1);
 	const wheelDC = getDataChannel(connection, "wheel", 2);
 
-	datachannel.onopen = (e) => {
-		console.log("datachannel is open");
-	};
-	mousemoveDC.onopen = (e) => {
-		console.log("mouse datachannel is open");
-	};
-	wheelDC.onopen = (e) => {
-		console.log("wheel datachannel is open");
+	const action = {
+		MOUSEMOVE: 0, // no longer in use
+		MOUSEDOWN: 1,
+		MOUSEUP: 2,
+		KEYDOWN: 3,
+		KEYUP: 4,
+		WHEEL: 5,
+		FOCUS: 6,
+		BLUR: 7,
+		BITRATE: 8,
+		ENCODE: 9,
+		SHORTCUT: 10,
 	};
 
 	// handle ice candidates
@@ -182,3 +186,154 @@ if (params.server) {
 		);
 	};
 }
+
+/************* USER ACTIONS  *****************/
+datachannel.onopen = (e) => {
+	console.log("datachannel is open");
+	let clientWidth = video.clientWidth;
+	let clientHeight = video.clientHeight;
+
+	datachannel.send(
+		JSON.stringify({
+			sender: self,
+			type: action.FOCUS,
+			program,
+		})
+	);
+
+	datachannel.onmessage = (e) => {
+		if (e.data === "") {
+			dcRttStat.textContent = (performance.now() - perfGen).toFixed(2);
+			return;
+		}
+
+		const userAction = JSON.parse(e.data);
+		switch (userAction.type) {
+			case action.ENCODE:
+				encodeStat.textContent = userAction.body;
+				break;
+			default:
+				console.error("Unrecognized message type");
+		}
+	};
+
+	const pressedMouseButtons = [];
+	video.addEventListener("mousedown", (e) => {
+		clientWidth = video.clientWidth;
+		clientHeight = video.clientHeight;
+
+		const curMouseButton = {
+			type: action.MOUSEDOWN,
+			x: (e.clientX / clientWidth) * max_X,
+			y: (e.clientY / clientHeight) * max_Y,
+			button: e.button,
+		};
+		datachannel.send(JSON.stringify(curMouseButton));
+		pressedMouseButtons.push(curMouseButton);
+	});
+
+	video.addEventListener("mouseup", (e) => {
+		clientWidth = video.clientWidth;
+		clientHeight = video.clientHeight;
+
+		const whichPressedButton = pressedMouseButtons.findIndex(
+			(key) => key.button === e.button
+		);
+		if (whichPressedButton >= 0) {
+			pressedMouseButtons.splice(whichPressedButton, 1);
+			datachannel.send(
+				JSON.stringify({
+					type: action.MOUSEUP,
+					x: (e.clientX / clientWidth) * max_X,
+					y: (e.clientY / clientHeight) * max_Y,
+					button: e.button,
+				})
+			);
+		} else
+			console.error(
+				`${e.button} button event received without corresponding mousedown!`
+			);
+	});
+
+	const pressedKeys = [];
+	window.addEventListener("keydown", (e) => {
+		const curKey = {
+			type: action.KEYDOWN,
+			key: e.key,
+			code: e.code,
+			altKey: e.altKey,
+			ctrlKey: e.ctrlKey,
+			metaKey: e.metaKey,
+			shiftKey: e.shiftKey,
+			location: e.location,
+		};
+
+		datachannel.send(JSON.stringify(curKey));
+		pressedKeys.push(curKey);
+	});
+
+	//Alt, AltGr, Control, Shift must
+	//be accounted for, and keyupd by
+	//hand when focus is lost
+
+	const unPressAndUnClickAll = () => {
+		while (pressedKeys.length > 0) {
+			const keyToUnpress = pressedKeys.pop();
+			keyToUnpress.type = action.KEYUP;
+			datachannel.send(JSON.stringify(keyToUnpress));
+		}
+
+		while (pressedMouseButtons.length > 0) {
+			const mouseButtonToUnpress = pressedMouseButtons.pop();
+			mouseButtonToUnpress.type = action.MOUSEUP;
+			datachannel.send(JSON.stringify(mouseButtonToUnpress));
+		}
+	};
+
+	window.addEventListener("blur", unPressAndUnClickAll);
+	window.addEventListener("beforeunload", unPressAndUnClickAll);
+
+	window.addEventListener("keyup", (e) => {
+		const whichPressedKey = pressedKeys.findIndex((key) => key.code === e.code);
+		if (whichPressedKey >= 0) {
+			pressedKeys.splice(whichPressedKey, 1);
+			datachannel.send(
+				JSON.stringify({
+					type: action.KEYUP,
+					key: e.key,
+					code: e.code,
+					altKey: e.altKey,
+					ctrlKey: e.ctrlKey,
+					metaKey: e.metaKey,
+					shiftKey: e.shiftKey,
+					location: e.location,
+				})
+			);
+		} else
+			console.error(
+				`${e.key} keyUp event received without corresponding keydown!`
+			);
+	});
+};
+mousemoveDC.onopen = (e) => {
+	console.log("mouse datachannel is open");
+	video.addEventListener("mousemove", (e) => {
+		//CURWORK
+		//this call to document.body needs to be debounced
+		clientWidth = video.clientWidth;
+		clientHeight = video.clientHeight;
+
+		mousemoveDC.send([
+			(e.offsetX / clientWidth) * max_X,
+			(e.offsetY / clientHeight) * max_Y,
+			e.button,
+		]);
+	});
+};
+wheelDC.onopen = (e) => {
+	console.log("wheel datachannel is open");
+	// passes -1 or 1 to robot, depending on the sign of delta value
+	window.addEventListener("wheel", (e) => {
+		wheelDC.send([-1 * e.deltaX, -1 * e.deltaY]);
+	});
+};
