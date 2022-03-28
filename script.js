@@ -66,6 +66,7 @@ const sendAnswer = (offer, server) => {
     .then(() => connection.createAnswer())
     .then((answer) => {
       connection.setLocalDescription(answer);
+      console.log("sending answer to other side");
       sendMessage(server, {
         sender: thisPeer,
         type: "answer",
