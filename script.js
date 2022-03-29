@@ -92,6 +92,10 @@ const createMailbox = (anonid) => {
         connection.addIceCandidate(msg.body);
         break;
 
+      case "forced disconnect":
+        connection.close();
+        break;
+
       case "vibe check":
         console.log("catching the vibe");
         sendMessage(server, {
