@@ -14,6 +14,7 @@ let max_Y;
 
 let mailbox;
 let connection;
+let videoConnection;
 let datachannel;
 let mousemoveDC;
 let wheelDC;
@@ -60,13 +61,11 @@ const getDataChannel = (connection, name, id) => {
 };
 
 const sendAnswer = (offer, server) => {
-  console.log(offer);
   connection
     .setRemoteDescription(offer)
     .then(() => connection.createAnswer())
     .then((answer) => {
       connection.setLocalDescription(answer);
-      console.log("sending answer to other side");
       sendMessage(server, {
         sender: thisPeer,
         type: "answer",
@@ -86,6 +85,18 @@ const createMailbox = (anonid) => {
     switch (msg.type) {
       case "offer":
         sendAnswer(msg.body, msg.sender);
+        videoConnection
+          .setRemoteDescription(msg.videoOffer)
+          .then(() => videoConnection.createAnswer())
+          .then((answer) => {
+            videoConnection.setLocalDescription(answer);
+            sendMessage(server, {
+              sender: thisPeer,
+              server,
+              type: "video answer",
+              answer,
+            });
+          });
         break;
 
       case "ice":
@@ -136,6 +147,7 @@ if (params.server) {
 
   const video = document.getElementById("video");
   connection = new RTCPeerConnection({ iceServers: iceServer });
+  videoConnection = new RTCPeerConnection({ iceServers: iceServer });
 
   datachannel = getDataChannel(connection, "general", 0);
   mousemoveDC = getDataChannel(connection, "mousemouse", 1);
@@ -152,19 +164,28 @@ if (params.server) {
       });
   };
 
+  videoConnection.onicecandidate = (e) =>
+    !e.candidate ||
+    sendMessage(server, {
+      sender: thisPeer,
+      type: "video ice",
+      body: e.candidate,
+      server,
+    });
+
   connection.oniceconnectionstatechange = (e) => {
     console.log(connection.iceConnectionState);
-    if (connection.iceConnectionState == "disconnected") {
-      video.removeAttribute("srcObject");
-      myStatus = "Unavailable";
-    }
   };
 
+  videoConnection.oniceconnectionstatechange = () =>
+    console.log(videoConnection.iceConnectionState);
+
+  // TODO: move stats interval to videoConnection
   connection.onclose = () => {
     clearInterval(statsInterval);
   };
 
-  connection.ontrack = (e) => {
+  videoConnection.ontrack = (e) => {
     console.log("track detected");
     const getVideoSize = () => {
       const server_aspect_ratio = max_X / max_Y;
